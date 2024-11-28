@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-import musicbrainzngs as mb
+from .source_apis import musicbrainz as mb
 
 # Create your views here.
 def index(request):
@@ -8,7 +8,6 @@ def index(request):
 
 def search(request):
     query = request.GET.get("q")
-    mb.set_useragent("apollo", "0.1", "http://localhost:8000")
-    results = mb.search_artists(query)
+    results = mb.search_artist(query)
 
     return render(request, "search.html", {"results": results})
