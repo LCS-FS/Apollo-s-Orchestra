@@ -15,16 +15,25 @@ network = pylast.LastFMNetwork(
     password_hash=password_hash,
 )
 
-# Get a track
-track = network.get_track("Iron Maiden", "The Nomad")
+# # Get a track
+# track = network.get_track("Iron Maiden", "The Nomad")
 
-# Fetch and display more details about the track
-print(f"Track: {track.get_title()}")
-print(f"Artist: {track.get_artist()}")
-print(f"Album: {track.get_album()}")
-print(f"Duration (ms): {track.get_duration()}")
-print(f"Play Count: {track.get_playcount()}")
-print(f"Listeners: {track.get_listener_count()}")
-print(f"Tags: {', '.join(tag.item for tag in track.get_top_tags(limit=5))}")
-print(f"Wiki Summary: {track.get_wiki_summary()}")
-print(f"Wiki Content: {track.get_wiki_content()}")
+# # Fetch and display more details about the track
+# print(f"Track: {track.get_title()}")
+# print(f"Artist: {track.get_artist()}")
+# print(f"Album: {track.get_album()}")
+# print(f"Duration (ms): {track.get_duration()}")
+# print(f"Play Count: {track.get_playcount()}")
+# print(f"Listeners: {track.get_listener_count()}")
+# print(f"Tags: {', '.join(tag.item for tag in track.get_top_tags(limit=5))}")
+# print(f"Wiki Summary: {track.get_wiki_summary()}")
+# print(f"Wiki Content: {track.get_wiki_content()}")
+
+def search_track_by_mbidc(mbid):
+    return network.get_track_by_mbid(mbid)
+
+def search_artist_by_mbid(mbid):
+    return network.get_artist_by_mbid(mbid)
+
+def search_album_by_mbid(mbid):
+    return network.get_album_by_mbid(mbid)

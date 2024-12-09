@@ -5,6 +5,10 @@ name = "pypi"
 
 [packages]
 django = "*"
+musicbrainzngs = "*"
+pylast = "*"
+rdflib = "*"
+sparqlwrapper = "*"
 
 [dev-packages]
 

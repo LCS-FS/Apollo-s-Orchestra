@@ -9,5 +9,6 @@ def index(request):
 def search(request):
     query = request.GET.get("q")
     results = mb.search_artist(query)
+    results = mb.get_artist(results[0]["id"])
 
     return render(request, "search.html", {"results": results})

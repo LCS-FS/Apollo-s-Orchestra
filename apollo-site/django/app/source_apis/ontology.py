@@ -1,6 +1,8 @@
 from typing import List, Optional
 from enum import Enum
 from datetime import date, timedelta
+from rdflib import Graph, Namespace, Literal, RDF, URIRef
+from rdflib.namespace import FOAF, DC, RDFS, XSD
 
 
 # Enum for AlbumReleaseType
@@ -35,6 +37,27 @@ class Member:
         nationality (Optional[str]): The nationality of the member. Defaults to None.
         about (Optional[str]): Additional information about the member. Defaults to None.
     """
+    def to_rdf(self) -> Graph:
+        g = Graph()
+        member_uri = EX[f"member/{self.artist_name.replace(' ', '_')}"]
+        g.add((member_uri, RDF.type, FOAF.Person))
+        g.add((member_uri, FOAF.name, Literal(self.artist_name)))
+        if self.given_name:
+            g.add((member_uri, FOAF.givenName, Literal(self.given_name)))
+        if self.gender:
+            g.add((member_uri, FOAF.gender, Literal(self.gender)))
+        if self.birth_date:
+            g.add((member_uri, FOAF.birthday, Literal(self.birth_date.isoformat(), datatype=XSD.date)))
+        if self.death_date:
+            g.add((member_uri, EX.deathDate, Literal(self.death_date.isoformat(), datatype=XSD.date)))
+        if self.nationality:
+            g.add((member_uri, EX.nationality, Literal(self.nationality)))
+        if self.about:
+            g.add((member_uri, DC.description, Literal(self.about)))
+        if self.picture:
+            g.add((member_uri, FOAF.img, URIRef(self.picture)))
+        return g
+
     def __init__(
         self,
         gender: str,
@@ -73,6 +96,28 @@ class Track:
     Methods:
         __init__: Initializes a Track instance with the provided attributes.
     """
+    def to_rdf(self) -> Graph:
+        g = Graph()
+        track_uri = EX[f"track/{self.name.replace(' ', '_')}"]
+        g.add((track_uri, RDF.type, EX.Track))
+        g.add((track_uri, DC.title, Literal(self.name)))
+        if self.duration:
+            g.add((track_uri, EX.duration, Literal(str(self.duration), datatype=XSD.duration)))
+        if self.about:
+            g.add((track_uri, DC.description, Literal(self.about)))
+        for composer in self.composer:
+            g.add((track_uri, EX.composer, Literal(composer)))
+        for lyricist in self.lyricist:
+            g.add((track_uri, EX.lyricist, Literal(lyricist)))
+        if self.lyrics:
+            g.add((track_uri, EX.lyrics, Literal(self.lyrics)))
+        for instrument in self.instruments:
+            g.add((track_uri, EX.instrument, Literal(instrument)))
+        if self.logo:
+            g.add((track_uri, FOAF.logo, URIRef(self.logo)))
+        return g
+
+
     def __init__(
         self,
         duration: Optional[timedelta],
@@ -108,6 +153,26 @@ class Album:
         logo (Optional[str]): A URL or path to the album's logo or cover image.
         name (str): The name of the album.
     """
+
+    def to_rdf(self) -> Graph:
+        g = Graph()
+        album_uri = EX[f"album/{self.name.replace(' ', '_')}"]
+        g.add((album_uri, RDF.type, EX.Album))
+        g.add((album_uri, DC.title, Literal(self.name)))
+        g.add((album_uri, EX.releaseType, Literal(self.release_type.value)))
+        g.add((album_uri, DC.date, Literal(self.date_published.isoformat(), datatype=XSD.date)))
+        if self.about:
+            g.add((album_uri, DC.description, Literal(self.about)))
+        if self.logo:
+            g.add((album_uri, FOAF.logo, URIRef(self.logo)))
+        for label in self.label:
+            g.add((album_uri, EX.label, Literal(label)))
+        for track in self.tracks:
+            g += track.to_rdf()  # Add the track RDF data
+            track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
+            g.add((album_uri, EX.hasTrack, track_uri))
+        return g
+
     def __init__(
         self,
         num_tracks: int,
@@ -165,11 +230,40 @@ class MusicGroup:
              description: Optional[str], albums: Optional[List[Album]] = None):
         Constructs all the necessary attributes for the music group object.
     """
+    def to_rdf(self) -> Graph:
+        g = Graph()
+        group_uri = EX[f"musicgroup/{self.name.replace(' ', '_')}"]
+        g.add((group_uri, RDF.type, FOAF.Group))
+        g.add((group_uri, FOAF.name, Literal(self.name)))
+        if self.genre:
+            g.add((group_uri, EX.genre, Literal(self.genre)))
+        for award in self.awards:
+            g.add((group_uri, EX.award, Literal(award)))
+        if self.dissolution_date:
+            g.add((group_uri, EX.dissolutionDate, Literal(self.dissolution_date.isoformat(), datatype=XSD.date)))
+        if self.founding_date:
+            g.add((group_uri, EX.foundingDate, Literal(self.founding_date.isoformat(), datatype=XSD.date)))
+        if self.founding_location:
+            g.add((group_uri, EX.foundingLocation, Literal(self.founding_location)))
+        if self.logo:
+            g.add((group_uri, FOAF.logo, URIRef(self.logo)))
+        if self.description:
+            g.add((group_uri, DC.description, Literal(self.description)))
+        for member in self.members:
+            g += member.to_rdf()  # Add the member RDF data
+            member_uri = EX[f"member/{member.artist_name.replace(' ', '_')}"]
+            g.add((group_uri, FOAF.member, member_uri))
+        for album in self.albums:
+            g += album.to_rdf()  # Add the album RDF data
+            album_uri = EX[f"album/{album.name.replace(' ', '_')}"]
+            g.add((group_uri, EX.hasAlbum, album_uri))
+        return g
+
     def __init__(
         self,
         name: str,
         genre: Optional[str],
-        awards: Optional[List[str]],
+        awards: str,
         dissolution_date: Optional[date],
         founding_location: Optional[str],
         founding_date: date,

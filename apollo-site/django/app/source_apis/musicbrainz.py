@@ -50,7 +50,7 @@ def get_track(track_id):
     return mb.get_recording_by_id(track_id)["recording"]
 
 def get_instruments(track_id):
-    return mb.get_recording_by_id(track_id)["recording"]
+    return mb.get_recording_by_id(track_id)["recording"]['instrument-list']
 
 def get_track_albums(track_id):
     return mb.browse_release(recording=track_id)["release-list"]
