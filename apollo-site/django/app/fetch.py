@@ -15,19 +15,17 @@ def fetch_artist(query):
             foundind_date = artist['life-span']['begin']
             founding_location = f"{artist['begin-area']['name']}, {artist['area']['name']}"
             description = artist_lastfm.get_bio_content()
-            if artist['life-span']['ended']:
-                dissolution_date = wikidata.query_band_dissolution_date(name)['results']['bindings'][0]['dissolutionDate']['value'].split('T')[0]
-            logo = wikidata.query_band_logo(name)['results']['bindings'][0]['logo']['value']
 
             if artist['type'] == 'Group':
+                if artist['life-span']['ended']:
+                    dissolution_date = wikidata.query_band_dissolution_date(name)['results']['bindings'][0]['dissolutionDate']['value'].split('T')[0]
+                logo = wikidata.query_band_logo(name)['results']['bindings'][0]['logo']['value']
+            
                 members = wikidata.query_band_members(name)['results']['bindings']
                 members = [member['memberLabel']['value'] for member in members]
 
                 for member_s in members:
                     member = wikidata.query_artist_details(member_s)
-                    print(member)
-                    print(type(member))
-                    print("#####################")
                     try:
                         member = member['results']['bindings'][0]
                         band_members.append(ontology.Member(
@@ -42,7 +40,11 @@ def fetch_artist(query):
                     except:
                         pass
             elif artist['type'] == 'Person':
+                dissolution_date = artist['life-span']['end'] if 'end' in artist['life-span'] else None
+                
                 member = wikidata.query_artist_details(name)['results']['bindings'][0]
+                logo = member['picture']['value'] if 'picture' in member else None
+
                 band_members.append(ontology.Member(
                     given_name=member['givenName']['value'] if 'givenName' in member else member['pseudonym']['value'] if 'pseudonym' in member else None,
                     gender=member['genderLabel']['value'],
