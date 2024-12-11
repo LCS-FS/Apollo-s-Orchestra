@@ -1,98 +1,102 @@
 from source_apis import lastfm, lyrics, musicbrainz, wikidata, ontology
 import json
+from rdflib import Graph
+
+def get_artist_aux(artist):
+    try:
+        band_members = []
+        artist_lastfm = lastfm.search_artist_by_mbid(artist['id'])
+
+        name = artist["name"]
+        genre = artist['disambiguation']
+        foundind_date = artist['life-span']['begin']
+        founding_location = f"{artist['begin-area']['name']}, {artist['area']['name']}"
+        description = artist_lastfm.get_bio_content()
+
+        if artist['type'] == 'Group':
+            if artist['life-span']['ended']:
+                dissolution_date = wikidata.query_band_dissolution_date(name)['results']['bindings'][0]['dissolutionDate']['value'].split('T')[0]
+            logo = wikidata.query_band_logo(name)['results']['bindings'][0]['logo']['value']
+        
+            members = wikidata.query_band_members(name)['results']['bindings']
+            members = [member['memberLabel']['value'] for member in members]
+
+            for member_s in members:
+                member = wikidata.query_artist_details(member_s)
+                try:
+                    member = member['results']['bindings'][0]
+                    band_members.append(ontology.Member(
+                        given_name=member['givenName']['value'] if 'givenName' in member else member['pseudonym']['value'] if 'pseudonym' in member else None,
+                        gender=member['genderLabel']['value'],
+                        artist_name=member['pseudonym']['value'] if 'pseudonymLabel' in member else None,
+                        birth_date=member['birthDate']['value'].split('T')[0],
+                        death_date=member['deathDate']['value'].split('T')[0] if 'deathDate' in member else None,
+                        nationality=member['nationalityLabel']['value'] if 'nationalityLabel' in member else None,
+                        picture=member['picture']['value'] if 'picture' in member else None
+                    ))
+                except:
+                    pass
+        elif artist['type'] == 'Person':
+            dissolution_date = artist['life-span']['end'] if 'end' in artist['life-span'] else None
+            
+            member = wikidata.query_artist_details(name)['results']['bindings'][0]
+            logo = member['picture']['value'] if 'picture' in member else None
+
+            band_members.append(ontology.Member(
+                given_name=member['givenName']['value'] if 'givenName' in member else member['pseudonym']['value'] if 'pseudonym' in member else None,
+                gender=member['genderLabel']['value'],
+                artist_name=member['pseudonym']['value'] if 'pseudonymLabel' in member else None,
+                birth_date=member['birthDate']['value'].split('T')[0],
+                death_date=member['deathDate']['value'].split('T')[0] if 'deathDate' in member else None,
+                nationality=member['nationalityLabel']['value'] if 'nationalityLabel' in member else None,
+                picture=member['picture']['value'] if 'picture' in member else None
+            ))
+        else :
+            return None
+        artist_obj = ontology.MusicGroup(
+            name=name,
+            genre=genre,
+
+            founding_date=foundind_date,
+            founding_location=founding_location,
+            description=description,
+            dissolution_date=dissolution_date,
+            logo=logo,
+            members=band_members
+        )
+        print("success")
+        return artist_obj
+    except Exception as e:
+        print(f"\033[91m{e}\033[0m")
+        return None
 
 def fetch_artist(query):
     artist_obj_list = []
     artist_mb = musicbrainz.search_artist(query)
     # from str to json
     for artist in artist_mb:
-        try:
-            band_members = []
-            artist_lastfm = lastfm.search_artist_by_mbid(artist['id'])
-
-            name = artist["name"]
-            genre = artist['disambiguation']
-            foundind_date = artist['life-span']['begin']
-            founding_location = f"{artist['begin-area']['name']}, {artist['area']['name']}"
-            description = artist_lastfm.get_bio_content()
-
-            if artist['type'] == 'Group':
-                if artist['life-span']['ended']:
-                    dissolution_date = wikidata.query_band_dissolution_date(name)['results']['bindings'][0]['dissolutionDate']['value'].split('T')[0]
-                logo = wikidata.query_band_logo(name)['results']['bindings'][0]['logo']['value']
-            
-                members = wikidata.query_band_members(name)['results']['bindings']
-                members = [member['memberLabel']['value'] for member in members]
-
-                for member_s in members:
-                    member = wikidata.query_artist_details(member_s)
-                    try:
-                        member = member['results']['bindings'][0]
-                        band_members.append(ontology.Member(
-                            given_name=member['givenName']['value'] if 'givenName' in member else member['pseudonym']['value'] if 'pseudonym' in member else None,
-                            gender=member['genderLabel']['value'],
-                            artist_name=member['pseudonym']['value'] if 'pseudonymLabel' in member else None,
-                            birth_date=member['birthDate']['value'].split('T')[0],
-                            death_date=member['deathDate']['value'].split('T')[0] if 'deathDate' in member else None,
-                            nationality=member['nationalityLabel']['value'] if 'nationalityLabel' in member else None,
-                            picture=member['picture']['value'] if 'picture' in member else None
-                        ))
-                    except:
-                        pass
-            elif artist['type'] == 'Person':
-                dissolution_date = artist['life-span']['end'] if 'end' in artist['life-span'] else None
-                
-                member = wikidata.query_artist_details(name)['results']['bindings'][0]
-                logo = member['picture']['value'] if 'picture' in member else None
-
-                band_members.append(ontology.Member(
-                    given_name=member['givenName']['value'] if 'givenName' in member else member['pseudonym']['value'] if 'pseudonym' in member else None,
-                    gender=member['genderLabel']['value'],
-                    artist_name=member['pseudonym']['value'] if 'pseudonymLabel' in member else None,
-                    birth_date=member['birthDate']['value'].split('T')[0],
-                    death_date=member['deathDate']['value'].split('T')[0] if 'deathDate' in member else None,
-                    nationality=member['nationalityLabel']['value'] if 'nationalityLabel' in member else None,
-                    picture=member['picture']['value'] if 'picture' in member else None
-                ))
-            else :
-                continue
-            artist_obj_list.append(ontology.MusicGroup(
-                name=name,
-                genre=genre,
-
-                founding_date=foundind_date,
-                founding_location=founding_location,
-                description=description,
-                dissolution_date=dissolution_date,
-                logo=logo,
-                members=band_members
-            ))
-            print("success")
-        except Exception as e:
-            print(f"\033[91m{e}\033[0m")
-            continue
+        artist_obj = get_artist_aux(artist)
+        if artist_obj:
+            artist_obj_list.append(artist_obj)
     return artist_obj_list
 
-
-def fetch_artist_rdf(artist_name):
-    return None
+def fetch_artist_from_id(artist_id):
+    artist = musicbrainz.get_artist(artist_id)
+    return get_artist_aux(artist)
 
 def fetch_album(query):
     return None
 
-def fetch_album_rdf(album_name):
+def fetch_album_from_id(album_id):
     return None
 
 def fetch_track(query):
     return None
 
-def fetch_track_rdf(track_name):
+def fetch_track_from_id(track_id):
     return None
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     #TODO: Fix issue with single artists search
-    results = fetch_artist('Elton John')
-    print(len(results))
-    for result in results:
-        print(result)
-        print("##############################")
+    results = fetch_artist_from_id("b83bc61f-8451-4a5d-8b8e-7e9ed295e822")
+    print(results)
