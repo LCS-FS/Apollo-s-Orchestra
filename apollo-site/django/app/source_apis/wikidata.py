@@ -4,14 +4,19 @@ import json
 def query_artist_details(artist_name):
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
     sparql.setQuery(f"""
-    SELECT ?artist ?artistLabel ?birthDate ?genreLabel WHERE {{
-      ?artist wdt:P31 wd:Q5;  # Instance of human
-              rdfs:label "{artist_name}"@en; # Artist name
-              wdt:P569 ?birthDate;           # Birth date
-              wdt:P136 ?genre.               # Genre
+    SELECT ?artist ?artistLabel ?givenName ?pseudonym ?birthDate ?deathDate ?genderLabel ?nationalityLabel ?picture WHERE {{
+      ?artist rdfs:label "{artist_name}"@en;  # Artist name
+              wdt:P31 wd:Q5.                 # Instance of human
+      OPTIONAL {{ ?artist wdt:P1477 ?givenName. }}         # Given name
+      OPTIONAL {{ ?artist wdt:P742 ?pseudonym. }}       # Artist name
+      OPTIONAL {{ ?artist wdt:P569 ?birthDate. }}         # Date of birth
+      OPTIONAL {{ ?artist wdt:P570 ?deathDate. }}         # Date of death
+      OPTIONAL {{ ?artist wdt:P21 ?gender. }}             # Gender
+      OPTIONAL {{ ?artist wdt:P27 ?nationality. }}        # Nationality
+      OPTIONAL {{ ?artist wdt:P18 ?picture. }}            # Picture URL
       SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
     }}
-    LIMIT 10
+    LIMIT 1
     """)
     sparql.setReturnFormat(JSON)
     results = sparql.query().convert()
@@ -87,21 +92,26 @@ def query_band_members(band_name):
     """
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
     sparql.setQuery(f"""
-    SELECT ?member ?memberLabel ?givenName ?artistName ?birthDate ?deathDate ?genderLabel ?nationalityLabel ?about ?picture WHERE {{
-      ?band rdfs:label "{band_name}"@en;       # Band name
-            wdt:P31 wd:Q215380;               # Instance of band or group
-            wdt:P527 ?member.                 # Members
-      OPTIONAL {{ ?member wdt:P735 ?birthnName. }}         # Given name
-      OPTIONAL {{ ?member wdt:P1477 ?pseudonym. }}       # Artist name
-      OPTIONAL {{ ?member wdt:P569 ?birthDate. }}         # Date of birth
-      OPTIONAL {{ ?member wdt:P570 ?deathDate. }}         # Date of death
-      OPTIONAL {{ ?member wdt:P21 ?gender. }}             # Gender
-      OPTIONAL {{ ?member wdt:P27 ?nationality. }}        # Nationality
-      OPTIONAL {{ ?member wdt:P18 ?picture. }}            # Picture URL
-      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
-    }}
-    LIMIT 20
-    """)
+SELECT ?member ?memberLabel ?givenName ?artistName ?birthDate ?deathDate ?genderLabel ?nationalityLabel ?picture WHERE {{
+  ?band rdfs:label "{band_name}"@en;          # Band name
+        wdt:P31/wdt:P279* wd:Q215380.         # Instance of band or group
+  {{
+    ?band wdt:P527 ?member.                  # Members from band
+  }} UNION {{
+    ?member wdt:P361 ?band.                  # Band from member
+  }}
+  OPTIONAL {{ ?member wdt:P1477 ?birthName. }}         # Given name
+  OPTIONAL {{ ?member wdt:P742 ?pseudonym. }}          # Artist name
+  OPTIONAL {{ ?member wdt:P569 ?birthDate. }}          # Date of birth
+  OPTIONAL {{ ?member wdt:P570 ?deathDate. }}          # Date of death
+  OPTIONAL {{ ?member wdt:P21 ?gender. }}              # Gender
+  OPTIONAL {{ ?member wdt:P27 ?nationality. }}         # Nationality
+  OPTIONAL {{ ?member wdt:P18 ?picture. }}             # Picture URL
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
+}}
+LIMIT 20
+""")
+
     sparql.setReturnFormat(JSON)
     results = sparql.query().convert()
     return results
@@ -159,10 +169,10 @@ def query_band_dissolution_date(band_name):
 # print("\n\n\n")
 # print(query_band_logo("The Beatles"))
 # print("\n\n\n")
-print(json.dumps(query_band_members("The Beatles")))
+# print(json.dumps(query_band_members("Linkin Park")))
 # print("\n\n\n")
 # print(query_band_members("Elton John"))
 # print("\n\n\n")
 # print(query_artist_details("The Beatles"))
 # print("\n\n\n")
-# print(query_artist_details("Elton John"))
+#print(json.dumps(query_artist_details("Elton John")))

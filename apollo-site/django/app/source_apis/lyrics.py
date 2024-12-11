@@ -14,8 +14,8 @@ def get_lyrics(artist_name, track_name):
     
     return lyrics.strip()
 
-# Example usage
-artist = "Iron Maiden"
-track = "The Nomad"
-lyrics = get_lyrics(artist, track)
-print(f"Lyrics for '{track}' by {artist}:\n{lyrics}")
+# # Example usage
+# artist = "Iron Maiden"
+# track = "The Nomad"
+# lyrics = get_lyrics(artist, track)
+# print(f"Lyrics for '{track}' by {artist}:\n{lyrics}")

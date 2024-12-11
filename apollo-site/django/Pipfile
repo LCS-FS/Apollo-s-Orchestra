@@ -9,6 +9,7 @@ musicbrainzngs = "*"
 pylast = "*"
 rdflib = "*"
 sparqlwrapper = "*"
+requests = "*"
 
 [dev-packages]
 

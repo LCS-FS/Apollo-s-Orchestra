@@ -52,8 +52,6 @@ class Member:
             g.add((member_uri, EX.deathDate, Literal(self.death_date.isoformat(), datatype=XSD.date)))
         if self.nationality:
             g.add((member_uri, EX.nationality, Literal(self.nationality)))
-        if self.about:
-            g.add((member_uri, DC.description, Literal(self.about)))
         if self.picture:
             g.add((member_uri, FOAF.img, URIRef(self.picture)))
         return g
@@ -62,11 +60,10 @@ class Member:
         self,
         gender: str,
         given_name: str,
-        artist_name: str,
+        artist_name: Optional[str] = None ,
         birth_date: Optional[date] = None,
         death_date: Optional[date] = None,
         nationality: Optional[str] = None,
-        about: Optional[str] = None,
         picture: Optional[str] = None,
     ):
         self.gender = gender
@@ -75,8 +72,10 @@ class Member:
         self.birth_date = birth_date
         self.death_date = death_date
         self.nationality = nationality
-        self.about = about
         self.picture = picture
+    
+    def __repr__(self):
+        return f"Member(\n\tgender={self.gender}, \n\tgiven_name={self.given_name}, \n\tartist_name={self.artist_name}, \n\tbirth_date={self.birth_date}, \n\tdeath_date={self.death_date}, \n\tnationality={self.nationality}, \n\tpicture={self.picture}\n)"
 
 
 # Track Class
@@ -263,13 +262,13 @@ class MusicGroup:
         self,
         name: str,
         genre: Optional[str],
-        awards: str,
         dissolution_date: Optional[date],
         founding_location: Optional[str],
         founding_date: date,
         members: List[Member],
         logo: Optional[str],
         description: Optional[str],
+        awards: Optional[List[str]] = None,
         albums: Optional[List[Album]] = None,
     ):
         self.name = name
@@ -282,3 +281,6 @@ class MusicGroup:
         self.logo = logo
         self.description = description
         self.albums = albums or []
+    
+    def __repr__(self):
+        return f"MusicGroup(\n\tname={self.name}, \n\tgenre={self.genre},\n\tawards={self.awards} ,\n\tfounding_date={self.founding_date}, \n\tfounding_location={self.founding_location}, \n\tdissolution_date={self.dissolution_date},\n\tmembers={self.members}, \n\talbums={self.albums}, \n\tlogo={self.logo}, \n\tdescription={self.description}\n)"
