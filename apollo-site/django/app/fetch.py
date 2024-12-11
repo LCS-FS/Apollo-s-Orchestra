@@ -88,7 +88,8 @@ def fetch_track_rdf(track_name):
     return None
 
 if __name__ == '__main__':
-    results = fetch_artist('The Beatles')
+    #TODO: Fix issue with single artists search
+    results = fetch_artist('Elton John')
     print(len(results))
     for result in results:
         print(result)
