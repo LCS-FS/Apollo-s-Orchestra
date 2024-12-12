@@ -12,6 +12,7 @@ def get_artist_aux(artist):
         foundind_date = artist['life-span']['begin']
         founding_location = f"{artist['begin-area']['name']}, {artist['area']['name']}"
         description = artist_lastfm.get_bio_content()
+        id = artist['id']
 
         if artist['type'] == 'Group':
             if artist['life-span']['ended']:
@@ -56,7 +57,7 @@ def get_artist_aux(artist):
         artist_obj = ontology.MusicGroup(
             name=name,
             genre=genre,
-
+            id=id,
             founding_date=foundind_date,
             founding_location=founding_location,
             description=description,
@@ -69,6 +70,61 @@ def get_artist_aux(artist):
     except Exception as e:
         print(f"\033[91m{e}\033[0m")
         return None
+
+def get_track_aux(track):
+    track_lastfm = lastfm.search_track_by_mbid(track['id'])
+    
+    track_obj = ontology.Track(
+        name=track['title'],
+        score=track['ext:score'] if 'ext:score' in track else None,
+        id=track['id'],
+        duration=f"{int(track['length']) // 60000}:{int(track['length']) % 60000}",
+        music_group_id=track['artist-credit'][0]['artist']['id'],
+        music_group_name=track['artist-credit'][0]['artist']['name'],
+        album_id=track['release-list'][0]['id'] if 'id' in track['release-list'][0] else None,
+        album_name=track['release-list'][0]['title'] if 'title' in track['release-list'][0] else None,
+        about=track_lastfm.get_wiki_content(),
+        logo=lastfm.get_album_cover(track['release-list'][0]['id']),
+        lyrics=lyrics.get_lyrics(track['artist-credit'][0]['artist']['name'], track['title'])
+    )
+    print("success")
+    return track_obj
+
+def get_album_aux(album):
+    album_lastfm = lastfm.search_album_by_mbid(album['id'])
+
+    album_tracks = musicbrainz.get_album_tracks(album['id'])
+    album_tracks_obj = []
+
+    for track in album_tracks:
+        try:
+            track_obj = get_track_aux(track)
+            album_tracks_obj.append(track_obj)
+        except Exception as e:
+            print(f"\033[91mtrack: {e}\033[0m")
+
+
+    #wikidata: label, logo, 
+    wikidata_album = wikidata.query_album_record_by_MB_Id(album['id'])
+    
+    label = wikidata_album['results']['bindings']['recordLabel']['value'] if 'recordLabel' in wikidata_album['results']['bindings'] else None
+    
+    album_obj = ontology.Album(
+        name=album['title'],
+        id=album['id'],
+        artist_name=album['artist-credit'][0]['artist']['name'],
+        artist_id=album['artist-credit'][0]['artist']['id'],
+        about = album_lastfm.get_wiki_content(),
+        release_type=album['release-group']['type'],
+        date_published=album['date'],
+        num_tracks=album['medium-track-count'],
+        tracks=album_tracks_obj,
+        label=label,
+        score=album['ext:score'] if 'ext:score' in album else None,
+        logo=lastfm.get_album_cover(album['id'])
+    )
+    print("success")
+    return album_obj
 
 def fetch_artist(query):
     artist_obj_list = []
@@ -85,18 +141,46 @@ def fetch_artist_from_id(artist_id):
     return get_artist_aux(artist)
 
 def fetch_album(query):
-    return None
+    albums_obj_list = []
+    albums_mb = musicbrainz.search_album(query)
+
+    for album in albums_mb:
+        try:
+            album_obj = get_album_aux(album)
+            albums_obj_list.append(album_obj)
+        except Exception as e:
+            print(f"\033[91m{e}\033[0m")
+    return albums_obj_list
 
 def fetch_album_from_id(album_id):
-    return None
+    album = musicbrainz.get_album(album_id)
+    return get_album_aux(album)
 
 def fetch_track(query):
-    return None
+    tracks = musicbrainz.search_track(query)
+    tracks_obj_list = []
+
+    for track in tracks:
+        try:
+            track_obj = get_track_aux(track)
+            tracks_obj_list.append(track_obj)
+        except Exception as e:
+            print(f"\033[91m{e}\033[0m")
+    return tracks_obj_list
 
 def fetch_track_from_id(track_id):
-    return None
+    track = musicbrainz.get_track(track_id)
+    return get_track_aux(track)
 
-# if __name__ == '__main__':
-    #TODO: Fix issue with single artists search
-    results = fetch_artist_from_id("b83bc61f-8451-4a5d-8b8e-7e9ed295e822")
-    print(results)
+def join_artist_albums(artist_obj):
+    albums = musicbrainz.get_artist_albums(artist_obj.id)
+    albums_obj_list = []
+    for album in albums:
+        try:
+            album_obj = get_album_aux(album)
+            albums_obj_list.append(album_obj)
+        except Exception as e:
+            print(f"\033[91m{e}\033[0m")
+    
+    artist_obj.albums = albums_obj_list
+    return artist_obj

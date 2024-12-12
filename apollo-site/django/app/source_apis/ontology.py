@@ -90,7 +90,6 @@ class Track:
         composer (Optional[List[str]]): A list of composers of the track. Defaults to an empty list.
         lyricist (Optional[List[str]]): A list of lyricists of the track. Defaults to an empty list.
         lyrics (Optional[str]): The lyrics of the track.
-        instruments (Optional[List[str]]): A list of instruments used in the track. Defaults to an empty list.
 
     Methods:
         __init__: Initializes a Track instance with the provided attributes.
@@ -101,41 +100,62 @@ class Track:
         g.add((track_uri, RDF.type, EX.Track))
         g.add((track_uri, DC.title, Literal(self.name)))
         if self.duration:
-            g.add((track_uri, EX.duration, Literal(str(self.duration), datatype=XSD.duration)))
+            g.add(track_uri, EX.duration, Literal(self.duration), datatype=XSD.duration)
         if self.about:
             g.add((track_uri, DC.description, Literal(self.about)))
-        for composer in self.composer:
-            g.add((track_uri, EX.composer, Literal(composer)))
-        for lyricist in self.lyricist:
-            g.add((track_uri, EX.lyricist, Literal(lyricist)))
         if self.lyrics:
             g.add((track_uri, EX.lyrics, Literal(self.lyrics)))
-        for instrument in self.instruments:
-            g.add((track_uri, EX.instrument, Literal(instrument)))
         if self.logo:
             g.add((track_uri, FOAF.logo, URIRef(self.logo)))
+        if self.id:
+            g.add((track_uri, EX.id, Literal(self.id)))
+        if self.music_group_name:
+            g.add((track_uri, EX.musicGroupName, Literal(self.music_group_name)))
+        if self.music_group_id:
+            g.add((track_uri, EX.musicGroupId, Literal(self.music_group_id)))
+        if self.album_name:
+            g.add((track_uri, EX.albumName, Literal(self.album_name)))
+        if self.album_id:
+            g.add((track_uri, EX.albumId, Literal(self.album_id)))
+        if self.score:
+            g.add((track_uri, EX.score, Literal(self.score)))
         return g
 
 
     def __init__(
         self,
-        duration: Optional[timedelta],
-        about: Optional[str],
+        id : str,
         name: str,
-        composer: Optional[List[str]] = None,
-        lyricist: Optional[List[str]] = None,
+        duration: Optional[str],
+        music_group_name: str,
+        music_group_id: str,
+        album_name: Optional[str],
+        album_id: Optional[str],
+        about: Optional[str] = None,
         lyrics: Optional[str] = None,
-        instruments: Optional[List[str]] = None,
         logo: Optional[str] = None,
+        score: Optional[int] = None,
     ):
+        self.id = id
         self.duration = duration
         self.about = about
         self.name = name
-        self.composer = composer or []
-        self.lyricist = lyricist or []
         self.lyrics = lyrics
-        self.instruments = instruments or []
         self.logo = logo
+        self.music_group_name = music_group_name
+        self.music_group_id = music_group_id
+        self.album_name = album_name
+        self.album_id = album_id
+        self.score = score
+
+    def __lt__(self, other):
+        return self.score < other.score
+
+    def __eq__(self, other):
+        return self.score == other.score
+    
+    def __repr__(self):
+        return f"Track(\n\tname={self.name}, \n\tduration={self.duration}, \n\tabout={self.about}, \n\tlyrics={self.lyrics}, \n\tmusic_group_name={self.music_group_name}, \n\tmusic_group_id={self.music_group_id}, \n\talbum_name={self.album_name}, \n\talbum_id={self.album_id}, \n\tlogo={self.logo}, \n\tscore={self.score}\n)"
 
 
 # Album Class
@@ -149,7 +169,6 @@ class Album:
         release_type (AlbumReleaseType): The type of release for the album (e.g., single, EP, album).
         about (Optional[str]): A description or additional information about the album.
         date_published (date): The date the album was published.
-        logo (Optional[str]): A URL or path to the album's logo or cover image.
         name (str): The name of the album.
     """
 
@@ -164,16 +183,23 @@ class Album:
             g.add((album_uri, DC.description, Literal(self.about)))
         if self.logo:
             g.add((album_uri, FOAF.logo, URIRef(self.logo)))
-        for label in self.label:
-            g.add((album_uri, EX.label, Literal(label)))
+        if self.label in self.label:
+            g.add((album_uri, EX.label, Literal(self.label)))
         for track in self.tracks:
             g += track.to_rdf()  # Add the track RDF data
             track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
             g.add((album_uri, EX.hasTrack, track_uri))
+        if self.score:
+            g.add((album_uri, EX.score, Literal(self.score)))
+        if self.artist_name:
+            g.add((album_uri, EX.artistName, Literal(self.artist_name)))
+        if self.artist_id:
+            g.add((album_uri, EX.artistId, Literal(self.artist_id)))
         return g
 
     def __init__(
         self,
+        id : str,
         num_tracks: int,
         tracks: List[Track],
         release_type: AlbumReleaseType,
@@ -181,7 +207,10 @@ class Album:
         date_published: date,
         logo: Optional[str],
         name: str,
-        labels: Optional[List[str]] = None,
+        label: Optional[str] = None,
+        score: Optional[int] = None,
+        artist_name: Optional[str] = None,
+        artist_id: Optional[str] = None,
     ):
         self.num_tracks = num_tracks
         self.tracks = tracks
@@ -190,7 +219,20 @@ class Album:
         self.date_published = date_published
         self.logo = logo
         self.name = name
-        self.label = labels or []
+        self.label = label
+        self.score = score
+        self.artist_name = artist_name
+        self.artist_id = artist_id
+        self.id = id
+    
+    def __repr__(self):
+        return f"Album(\n\tnum_tracks={self.num_tracks}, \n\ttracks={self.tracks}, \n\trelease_type={self.release_type}, \n\tabout={self.about}, \n\tdate_published={self.date_published}, \n\tname={self.name}, \n\tlabel={self.label}, \n\tscore={self.score}, \n\tartist_name={self.artist_name}, \n\tartist_id={self.artist_id}\n)"
+
+    def __lt__(self, other):
+        return self.score < other.score
+
+    def __eq__(self, other):
+        return self.score == other.score
 
 
 # MusicGroup Class
@@ -231,7 +273,7 @@ class MusicGroup:
     """
     def to_rdf(self) -> Graph:
         g = Graph()
-        group_uri = EX[f"musicgroup/{self.name.replace(' ', '_')}"]
+        group_uri = EX[f"musicgroup/{self.id}"]
         g.add((group_uri, RDF.type, FOAF.Group))
         g.add((group_uri, FOAF.name, Literal(self.name)))
         if self.genre:
@@ -256,10 +298,13 @@ class MusicGroup:
             g += album.to_rdf()  # Add the album RDF data
             album_uri = EX[f"album/{album.name.replace(' ', '_')}"]
             g.add((group_uri, EX.hasAlbum, album_uri))
+        if self.score:
+            g.add((group_uri, EX.score, Literal(self.score)))
         return g
 
     def __init__(
         self,
+        id: str,
         name: str,
         genre: Optional[str],
         dissolution_date: Optional[date],
@@ -268,9 +313,11 @@ class MusicGroup:
         members: List[Member],
         logo: Optional[str],
         description: Optional[str],
+        score: Optional[int] = None,
         awards: Optional[List[str]] = None,
         albums: Optional[List[Album]] = None,
     ):
+        self.id = id
         self.name = name
         self.genre = genre
         self.awards = awards or []
@@ -281,6 +328,14 @@ class MusicGroup:
         self.logo = logo
         self.description = description
         self.albums = albums or []
-    
+        self.score = score
+
     def __repr__(self):
         return f"MusicGroup(\n\tname={self.name}, \n\tgenre={self.genre},\n\tawards={self.awards} ,\n\tfounding_date={self.founding_date}, \n\tfounding_location={self.founding_location}, \n\tdissolution_date={self.dissolution_date},\n\tmembers={self.members}, \n\talbums={self.albums}, \n\tlogo={self.logo}, \n\tdescription={self.description}\n)"
+    
+
+    def __lt__(self, other):
+        return self.score < other.score
+
+    def __eq__(self, other):
+        return self.score == other.score

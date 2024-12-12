@@ -1,4 +1,5 @@
 import pylast
+import requests
 
 # API credentials
 API_KEY = "c392fa71288487f885a6b34d375c4cc4"  
@@ -15,21 +16,34 @@ network = pylast.LastFMNetwork(
     password_hash=password_hash,
 )
 
-# # Get a track
-# track = network.get_track("Iron Maiden", "The Nomad")
 
-# # Fetch and display more details about the track
-# print(f"Track: {track.get_title()}")
-# print(f"Artist: {track.get_artist()}")
-# print(f"Album: {track.get_album()}")
-# print(f"Duration (ms): {track.get_duration()}")
-# print(f"Play Count: {track.get_playcount()}")
-# print(f"Listeners: {track.get_listener_count()}")
-# print(f"Tags: {', '.join(tag.item for tag in track.get_top_tags(limit=5))}")
-# print(f"Wiki Summary: {track.get_wiki_summary()}")
-# print(f"Wiki Content: {track.get_wiki_content()}")
+def get_album_cover(mbid):
+    # Parameters for the API request
+    BASE_URL = 'http://ws.audioscrobbler.com/2.0/'
+    params = {
+        'method': 'album.getinfo',
+        'api_key': API_KEY,
+        'mbid': mbid,
+        'format': 'json'
+    }
+    
+    # Make the API request
+    response = requests.get(BASE_URL, params=params)
+    data = response.json()
+    
+    # Check if the response contains the album info
+    if 'album' in data and 'image' in data['album']:
+        # Extract the URL of the largest image (usually the last one in the list)
+        images = data['album']['image']
+        if images:
+            cover_url = images[-1]['#text']  # The largest size is typically at the end
+            return cover_url
+        else:
+            return "No image available for this album."
+    else:
+        return "Album not found or no image available."
 
-def search_track_by_mbidc(mbid):
+def search_track_by_mbid(mbid):
     return network.get_track_by_mbid(mbid)
 
 def search_artist_by_mbid(mbid):

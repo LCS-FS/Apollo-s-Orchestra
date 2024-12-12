@@ -165,14 +165,22 @@ def query_band_dissolution_date(band_name):
     results = sparql.query().convert()
     return results
 
-# print(query_band_dissolution_date("The Beatles"))
-# print("\n\n\n")
-# print(query_band_logo("The Beatles"))
-# print("\n\n\n")
-# print(json.dumps(query_band_members("Linkin Park")))
-# print("\n\n\n")
-# print(query_band_members("Elton John"))
-# print("\n\n\n")
-# print(query_artist_details("The Beatles"))
-# print("\n\n\n")
-#print(json.dumps(query_artist_details("Elton John")))
+def query_album_record_by_MB_Id(MB_id):
+    sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
+    
+    # SPARQL query to fetch album and logo based on MB ID
+    query = f"""
+    SELECT ?album ?albumLabel ?logo ?recordLabel WHERE {{
+        ?album wdt:P436 "{MB_id}" .  # Match the album using MB ID (P436)
+        OPTIONAL {{ ?album wdt:P264 ?recordLabel. }}  # Fetch the recordLabel (P264), if available
+        SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
+    }}
+    LIMIT 1
+    """
+    
+    sparql.setQuery(query)
+    sparql.setReturnFormat(JSON)
+    
+    # Execute the query and return results
+    results = sparql.query().convert()
+    return results
