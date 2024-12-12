@@ -39,9 +39,9 @@ def get_album_cover(mbid):
             cover_url = images[-1]['#text']  # The largest size is typically at the end
             return cover_url
         else:
-            return "No image available for this album."
+            return None
     else:
-        return "Album not found or no image available."
+        return None
 
 def search_track_by_mbid(mbid):
     return network.get_track_by_mbid(mbid)
