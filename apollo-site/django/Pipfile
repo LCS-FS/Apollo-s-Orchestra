@@ -4,12 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
 musicbrainzngs = "*"
 pylast = "*"
 rdflib = "*"
 sparqlwrapper = "*"
 requests = "*"
+django = "*"
 
 [dev-packages]
 

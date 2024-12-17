@@ -1,0 +1,11 @@
+{% comment %} result.name, result.logo, result.genre {% endcomment %}
+
+<div style="cursor: pointer;" class="mb-5" onclick="window.location.href='/artist/{{result.id}}'"> 
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <img src="{{ result.logo }}" style="width: 150px; height: 150px;">
+            <h3 class="ml-3">{{ result.name }}</h3>
+        </div>
+        <span >{{ result.genre }}</span>
+    </li>
+</div>

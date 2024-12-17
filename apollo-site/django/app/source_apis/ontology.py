@@ -3,7 +3,9 @@ from enum import Enum
 from datetime import date, timedelta
 from rdflib import Graph, Namespace, Literal, RDF, URIRef
 from rdflib.namespace import FOAF, DC, RDFS, XSD
+from datetime import datetime
 
+EX = Namespace("http://example.org/")
 
 # Enum for AlbumReleaseType
 class AlbumReleaseType(Enum):
@@ -134,7 +136,7 @@ class Track:
         about: Optional[str] = None,
         lyrics: Optional[str] = None,
         logo: Optional[str] = None,
-        score: Optional[int] = None,
+        score: Optional[int] = 0,
     ):
         self.id = id
         self.duration = duration
@@ -208,7 +210,7 @@ class Album:
         logo: Optional[str],
         name: str,
         label: Optional[str] = None,
-        score: Optional[int] = None,
+        score: Optional[int] = 0,
         artist_name: Optional[str] = None,
         artist_id: Optional[str] = None,
     ):
@@ -313,7 +315,7 @@ class MusicGroup:
         members: List[Member],
         logo: Optional[str],
         description: Optional[str],
-        score: Optional[int] = None,
+        score: Optional[int] = 0,
         awards: Optional[List[str]] = None,
         albums: Optional[List[Album]] = None,
     ):

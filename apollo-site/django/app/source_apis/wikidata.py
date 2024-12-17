@@ -131,7 +131,7 @@ def query_band_logo(band_name):
     sparql.setQuery(f"""
     SELECT ?band ?logo WHERE {{
       ?band rdfs:label "{band_name}"@en;       # Band name
-            wdt:P31 wd:Q215380;               # Instance of band or group
+            wdt:P31/wdt:P279* wd:Q215380;      # Instance of band or group
             wdt:P154 ?logo.                   # Logo
       SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
     }}
@@ -155,7 +155,7 @@ def query_band_dissolution_date(band_name):
     sparql.setQuery(f"""
     SELECT ?band ?dissolutionDate WHERE {{
       ?band rdfs:label "{band_name}"@en;       # Band name
-            wdt:P31 wd:Q215380;               # Instance of band or group
+            wdt:P31/wdt:P279* wd:Q215380;      # Instance of band or group
             wdt:P576 ?dissolutionDate.        # Dissolution date
       SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
     }}

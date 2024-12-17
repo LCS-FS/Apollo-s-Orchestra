@@ -1,0 +1,28 @@
+<form id="searchForm" class="flex-grow-1 pl-3" method="GET" action="/search/" >
+    <h1 class="d-flex align-items-center justify-content-center mb-4">Apollo's Orchestra</h1>
+    <div class="d-flex align-items-center justify-content-center">
+        <div style="width:90%;">
+            <div class="d-flex justify-content-between">
+                <h3 class="w-25 rounded" style="background-color: #f4f6f7;">Query:</h3>
+                <input type="text" name="query" required class="w-50" value="{{query}}"></input>
+                <input type="submit" value="Search" class="w-25"></input>
+            </div>
+        </div>
+    </div>
+    <div style="margin-right:auto;margin-left:auto;width:90%;">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <input type="radio" name="searchType" value="artists" required class="h1" 
+                {% if type == 1 %} checked {% endif %}>Artists</input>
+            </div>
+            <div>
+                <input type="radio" name="searchType" value="albums" required class="h1" 
+                {% if type == 2 %} checked  {% endif %} >Albuns</input>
+            </div>
+            <div>
+                <input type="radio" name="searchType" value="tracks" required class="h1"
+                {% if type == 3 %} checked {% endif %} >Tracks</input>
+            </div>
+        </div>
+    </div>
+</form>

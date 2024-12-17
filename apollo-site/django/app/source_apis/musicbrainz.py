@@ -12,7 +12,7 @@ def get_artist(artist_id):
     return mb.get_artist_by_id(id=artist_id)["artist"]
 
 def get_artist_albums(artist_id):
-    return mb.browse_release_groups(artist=artist_id)["release-list"]
+    return mb.browse_release_groups(artist=artist_id)["release-group-list"]
 
 # albums
 def search_album(query):

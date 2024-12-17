@@ -1,4 +1,4 @@
-from source_apis import lastfm, lyrics, musicbrainz, wikidata, ontology
+from .source_apis import lastfm, lyrics, musicbrainz, wikidata, ontology
 import json
 from rdflib import Graph
 
@@ -9,14 +9,19 @@ def get_artist_aux(artist):
 
         name = artist["name"]
         genre = artist['disambiguation']
-        foundind_date = artist['life-span']['begin']
-        founding_location = f"{artist['begin-area']['name']}, {artist['area']['name']}"
+        try:
+            foundind_date = artist['life-span']['begin'] if 'begin' in artist['life-span'] else None
+        except:
+            foundind_date = None
+        founding_location = f"{artist['begin-area']['name']}, {artist['area']['name']}" if 'begin-area' in artist and 'area' in artist else None
         description = artist_lastfm.get_bio_content()
         id = artist['id']
 
         if artist['type'] == 'Group':
-            if artist['life-span']['ended']:
-                dissolution_date = wikidata.query_band_dissolution_date(name)['results']['bindings'][0]['dissolutionDate']['value'].split('T')[0]
+            try:
+                dissolution_date = artist['life-span']['end'] if 'end' in artist['life-span'] else None
+            except:
+                dissolution_date = None
             logo = wikidata.query_band_logo(name)['results']['bindings'][0]['logo']['value']
         
             members = wikidata.query_band_members(name)['results']['bindings']
@@ -38,8 +43,10 @@ def get_artist_aux(artist):
                 except:
                     pass
         elif artist['type'] == 'Person':
-            dissolution_date = artist['life-span']['end'] if 'end' in artist['life-span'] else None
-            
+            try:
+                dissolution_date = artist['life-span']['end'] if 'end' in artist['life-span'] else None
+            except:
+                dissolution_date = None
             member = wikidata.query_artist_details(name)['results']['bindings'][0]
             logo = member['picture']['value'] if 'picture' in member else None
 
@@ -91,18 +98,7 @@ def get_track_aux(track):
     return track_obj
 
 def get_album_aux(album):
-    album_lastfm = lastfm.search_album_by_mbid(album['id'])
-
-    album_tracks = musicbrainz.get_album_tracks(album['id'])
-    album_tracks_obj = []
-
-    for track in album_tracks:
-        try:
-            track_obj = get_track_aux(track)
-            album_tracks_obj.append(track_obj)
-        except Exception as e:
-            print(f"\033[91mtrack: {e}\033[0m")
-
+    print(album)
 
     #wikidata: label, logo, 
     wikidata_album = wikidata.query_album_record_by_MB_Id(album['id'])
@@ -114,11 +110,11 @@ def get_album_aux(album):
         id=album['id'],
         artist_name=album['artist-credit'][0]['artist']['name'],
         artist_id=album['artist-credit'][0]['artist']['id'],
-        about = album_lastfm.get_wiki_content(),
+        about = None,
         release_type=album['release-group']['type'],
         date_published=album['date'],
         num_tracks=album['medium-track-count'],
-        tracks=album_tracks_obj,
+        tracks=None,
         label=label,
         score=album['ext:score'] if 'ext:score' in album else None,
         logo=lastfm.get_album_cover(album['id'])
@@ -173,7 +169,9 @@ def fetch_track_from_id(track_id):
     return get_track_aux(track)
 
 def join_artist_albums(artist_obj):
+    print(artist_obj.id)
     albums = musicbrainz.get_artist_albums(artist_obj.id)
+    print(albums)
     albums_obj_list = []
     for album in albums:
         try:
@@ -184,3 +182,16 @@ def join_artist_albums(artist_obj):
     
     artist_obj.albums = albums_obj_list
     return artist_obj
+
+def join_album_tracks(album_obj):
+    tracks = musicbrainz.get_album_tracks(album_obj.id)
+    tracks_obj_list = []
+    for track in tracks:
+        try:
+            track_obj = get_track_aux(track)
+            tracks_obj_list.append(track_obj)
+        except Exception as e:
+            print(f"\033[91m{e}\033[0m")
+    
+    album_obj.tracks = tracks_obj_list
+    return album_obj
