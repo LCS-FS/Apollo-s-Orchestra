@@ -32,15 +32,16 @@ def get_artist_aux(artist):
                 try:
                     member = member['results']['bindings'][0]
                     band_members.append(ontology.Member(
-                        given_name=member['givenName']['value'] if 'givenName' in member else member['pseudonym']['value'] if 'pseudonym' in member else None,
+                        given_name=member['givenName']['value'] if 'givenName' in member else member['pseudonym']['value'] if 'pseudonym' in member else member['artistLabel']['value'],
                         gender=member['genderLabel']['value'],
-                        artist_name=member['pseudonym']['value'] if 'pseudonymLabel' in member else None,
+                        artist_name=member['pseudonym']['value'] if 'pseudonym' in member else member['artistLabel']['value'] if 'artistLabel' in member else member['givenName']['value'] ,
                         birth_date=member['birthDate']['value'].split('T')[0],
                         death_date=member['deathDate']['value'].split('T')[0] if 'deathDate' in member else None,
                         nationality=member['nationalityLabel']['value'] if 'nationalityLabel' in member else None,
                         picture=member['picture']['value'] if 'picture' in member else None
                     ))
-                except:
+                except Exception as e:
+                    print(f"\033[91m{e}\033[0m")
                     pass
         elif artist['type'] == 'Person':
             try:
@@ -61,6 +62,9 @@ def get_artist_aux(artist):
             ))
         else :
             return None
+        
+        band_members = list({member.artist_name: member for member in band_members}.values())
+
         artist_obj = ontology.MusicGroup(
             name=name,
             genre=genre,
@@ -72,7 +76,7 @@ def get_artist_aux(artist):
             logo=logo,
             members=band_members
         )
-        print("success")
+        print("artist success")
         return artist_obj
     except Exception as e:
         print(f"\033[91m{e}\033[0m")
@@ -94,12 +98,10 @@ def get_track_aux(track):
         logo=lastfm.get_album_cover(track['release-list'][0]['id']),
         lyrics=lyrics.get_lyrics(track['artist-credit'][0]['artist']['name'], track['title'])
     )
-    print("success")
+    print("track success")
     return track_obj
 
-def get_album_aux(album):
-    print(album)
-
+def get_album_aux(album, artist_id=None, artist_name=None):
     #wikidata: label, logo, 
     wikidata_album = wikidata.query_album_record_by_MB_Id(album['id'])
     
@@ -108,18 +110,19 @@ def get_album_aux(album):
     album_obj = ontology.Album(
         name=album['title'],
         id=album['id'],
-        artist_name=album['artist-credit'][0]['artist']['name'],
-        artist_id=album['artist-credit'][0]['artist']['id'],
+        artist_name=artist_name if artist_name else album['artist-credit'][0]['artist']['name'],
+        artist_id=artist_id if artist_id else album['artist-credit'][0]['artist']['id'],
         about = None,
-        release_type=album['release-group']['type'],
-        date_published=album['date'],
-        num_tracks=album['medium-track-count'],
+        release_type=album['release-group']['type'] if 'release-group' in album else album['primary-type'] if 'primary-type' in album else None,
+        date_published=album['date'] if 'date' in album else album['first-release-date'] if 'first-release-date' in album else None,
+        num_tracks=album['medium-track-count'] if 'medium-track-count' in album else None,
         tracks=None,
         label=label,
         score=album['ext:score'] if 'ext:score' in album else None,
         logo=lastfm.get_album_cover(album['id'])
     )
-    print("success")
+    print("album success")
+    print(album_obj.logo)
     return album_obj
 
 def fetch_artist(query):
@@ -169,13 +172,11 @@ def fetch_track_from_id(track_id):
     return get_track_aux(track)
 
 def join_artist_albums(artist_obj):
-    print(artist_obj.id)
     albums = musicbrainz.get_artist_albums(artist_obj.id)
-    print(albums)
     albums_obj_list = []
     for album in albums:
         try:
-            album_obj = get_album_aux(album)
+            album_obj = get_album_aux(album, artist_id = artist_obj.id, artist_name=artist_obj.name)
             albums_obj_list.append(album_obj)
         except Exception as e:
             print(f"\033[91m{e}\033[0m")
@@ -194,4 +195,5 @@ def join_album_tracks(album_obj):
             print(f"\033[91m{e}\033[0m")
     
     album_obj.tracks = tracks_obj_list
+    album_obj.num_tracks = len(tracks_obj_list)
     return album_obj

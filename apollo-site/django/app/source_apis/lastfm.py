@@ -29,7 +29,10 @@ def get_album_cover(mbid):
     
     # Make the API request
     response = requests.get(BASE_URL, params=params)
+    print(f"audioscrobbler response: {response}")
     data = response.json()
+
+    print(f"data: {data}")
     
     # Check if the response contains the album info
     if 'album' in data and 'image' in data['album']:

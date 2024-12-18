@@ -78,6 +78,9 @@ class Member:
     
     def __repr__(self):
         return f"Member(\n\tgender={self.gender}, \n\tgiven_name={self.given_name}, \n\tartist_name={self.artist_name}, \n\tbirth_date={self.birth_date}, \n\tdeath_date={self.death_date}, \n\tnationality={self.nationality}, \n\tpicture={self.picture}\n)"
+    
+    def __eq__(self, value):
+        return self.artist_name == value.artist_name and self.given_name == value.given_name
 
 
 # Track Class

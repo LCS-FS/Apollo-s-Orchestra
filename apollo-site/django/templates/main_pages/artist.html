@@ -1,8 +1,87 @@
 {% extends "../base.html" %}
 
+{% comment %} 
+attributes:
+    MusicGroup:
+        id
+        name
+        genre
+        dissolution_date
+        founding_location
+        founding_date
+        Members:
+            gender
+            given_name
+            artist_name
+            birth_date
+            death_date
+            nationality
+            picture
+        logo
+        description
+        Albums:
+            date_published
+            logo
+            name
+            self.id = id
+
+{% endcomment %}
 
 {% block page %}
 
-<h1> {{result}} </h1>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex">
+            <img src="{{ artist.logo }}" class="img-fluid" alt="{{ artist.name }}">
+            <div class="align-items-center"> 
+                <h1 class="ml-3">{{ artist.name }}</h1>
+                <p class="ml-3">{{ artist.genre }}</p>
+            </div>
+        </div>
+        <div>
+            <p class="text-muted">Founded: {{ artist.founding_date }}</p>
+            <p class="text-muted">Location: {{ artist.founding_location }}</p>
+            {% if artist.dissolution_date %}
+                <p class="text-muted">Dissolved: {{ artist.dissolution_date }}</p>
+            {% endif %}
+        </div>
+    </div>
+    <div>
+        <p>{{ artist.description|safe }}</p>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Members</h2>
+        </div>
+    </div>
+    <div class="row">
+        {% for member in artist.members %}
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <img src="{{ member.picture }}" class="card-img-top" alt="{{ member.artist_name }}" style="width: 100%; height: 400px;">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">{{ member.artist_name }}</h5>
+                        <p class="card-text text-center">{{ member.given_name }}</p>
+                        <p class="card-text text-muted text-center mb-0">Born: {{ member.birth_date }}</p>
+                        {% if member.death_date %}
+                            <p class="card-text text-muted text-center">Died: {{ member.death_date }}</p>
+                        {% endif %}
+                        <p class="card-text text-muted text-center">{{ member.nationality }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Albums</h2>
+        </div>
+    </div>
+    <div class="row">
+        {% for result in artist.albums %}
+            {% include "search_results/album.html" %}
+        {% endfor %}
+    </div>
+</div>
 
 {% endblock page %}
