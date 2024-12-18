@@ -50,3 +50,9 @@ graph LR
     track --> trackName([name - **Text**])
     track --> lyrics([lyrics - **Text**])
 ```
+
+# Demo
+
+The video demo can be found here:
+
+[![Demo](https://youtu.be/LCJ0U5acnh0)](https://youtu.be/LCJ0U5acnh0)
