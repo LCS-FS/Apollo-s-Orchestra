@@ -41,17 +41,19 @@ class Member:
     """
     def to_rdf(self) -> Graph:
         g = Graph()
-        member_uri = EX[f"member/{self.artist_name.replace(' ', '_')}"]
+        member_uri = EX[f"member/{self.given_name.replace(' ', '_')}"]
         g.add((member_uri, RDF.type, FOAF.Person))
         g.add((member_uri, FOAF.name, Literal(self.artist_name)))
         if self.given_name:
             g.add((member_uri, FOAF.givenName, Literal(self.given_name)))
         if self.gender:
             g.add((member_uri, FOAF.gender, Literal(self.gender)))
+        print(self.birth_date)
         if self.birth_date:
-            g.add((member_uri, FOAF.birthday, Literal(self.birth_date.isoformat(), datatype=XSD.date)))
+            g.add((member_uri, FOAF.birthday, Literal(self.birth_date, datatype=XSD.date)))
+        print("HEREEEEEEE")
         if self.death_date:
-            g.add((member_uri, EX.deathDate, Literal(self.death_date.isoformat(), datatype=XSD.date)))
+            g.add((member_uri, EX.deathDate, Literal(self.death_date, datatype=XSD.date)))
         if self.nationality:
             g.add((member_uri, EX.nationality, Literal(self.nationality)))
         if self.picture:
@@ -105,7 +107,7 @@ class Track:
         g.add((track_uri, RDF.type, EX.Track))
         g.add((track_uri, DC.title, Literal(self.name)))
         if self.duration:
-            g.add(track_uri, EX.duration, Literal(self.duration), datatype=XSD.duration)
+            g.add((track_uri, EX.duration, Literal(self.duration)))
         if self.about:
             g.add((track_uri, DC.description, Literal(self.about)))
         if self.lyrics:
@@ -182,18 +184,19 @@ class Album:
         album_uri = EX[f"album/{self.name.replace(' ', '_')}"]
         g.add((album_uri, RDF.type, EX.Album))
         g.add((album_uri, DC.title, Literal(self.name)))
-        g.add((album_uri, EX.releaseType, Literal(self.release_type.value)))
-        g.add((album_uri, DC.date, Literal(self.date_published.isoformat(), datatype=XSD.date)))
+        g.add((album_uri, EX.releaseType, Literal(self.release_type)))
+        print(self.date_published)
+        if (self.date_published != None): 
+            g.add((album_uri, DC.date, Literal(self.date_published.isoformat())))
         if self.about:
             g.add((album_uri, DC.description, Literal(self.about)))
         if self.logo:
             g.add((album_uri, FOAF.logo, URIRef(self.logo)))
-        if self.label in self.label:
-            g.add((album_uri, EX.label, Literal(self.label)))
-        for track in self.tracks:
-            g += track.to_rdf()  # Add the track RDF data
-            track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
-            g.add((album_uri, EX.hasTrack, track_uri))
+        #Uncomment for the real deal
+        #for track in self.tracks:
+        #    g += track.to_rdf()  # Add the track RDF data
+        #    track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
+        #    g.add((album_uri, EX.hasTrack, track_uri))
         if self.score:
             g.add((album_uri, EX.score, Literal(self.score)))
         if self.artist_name:
@@ -209,7 +212,7 @@ class Album:
         tracks: List[Track],
         release_type: AlbumReleaseType,
         about: Optional[str],
-        date_published: date,
+        date_published: Optional[date],
         logo: Optional[str],
         name: str,
         label: Optional[str] = None,
@@ -295,9 +298,13 @@ class MusicGroup:
             g.add((group_uri, FOAF.logo, URIRef(self.logo)))
         if self.description:
             g.add((group_uri, DC.description, Literal(self.description)))
+    
         for member in self.members:
+            path = member.given_name.replace(' ', '_')
             g += member.to_rdf()  # Add the member RDF data
-            member_uri = EX[f"member/{member.artist_name.replace(' ', '_')}"]
+            print(path)
+            member_uri = EX[f"member/{path}"]
+            print("here Music Group")
             g.add((group_uri, FOAF.member, member_uri))
         for album in self.albums:
             g += album.to_rdf()  # Add the album RDF data
