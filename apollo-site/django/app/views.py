@@ -43,6 +43,7 @@ def album(request, album_id):
 
 def track(request, track_id):
     track = fetch_track_from_id(track_id)
+    print(f"track object: {track}")
     return render(request, "main_pages/track.html", {"track": track})
 
 def artist_rdf(request, artist_id):

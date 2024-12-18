@@ -77,7 +77,7 @@ def get_track(track_id):
 
 
 def get_track_albums(track_id):
-    return mb.browse_release(recording=track_id)["release-list"]
+    return mb.browse_releases(recording=track_id)["release-list"]
 
 def get_track_artists(track_id):
     return mb.browse_artists(recording=track_id)["artist-list"]

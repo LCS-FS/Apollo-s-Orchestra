@@ -1,4 +1,4 @@
-from .source_apis import lastfm, lyrics, musicbrainz, wikidata, ontology
+from .source_apis import lastfm, lyrics as lyricslib, musicbrainz, wikidata, ontology
 import json
 from rdflib import Graph
 from datetime import datetime
@@ -127,11 +127,14 @@ def get_track_aux(track, album_id=None, album_name=None, image_url=None, artist_
     else:
         logo = image_url
 
+
+    print(f"Artist: {artist_name} {track['title']}")
     try:
-        lyrics = lyrics.get_lyrics(artist_name, track['title'])
+        lyrics = lyricslib.get_lyrics(artist_name, track['title'])
+        print(lyrics)
     except:
         try:
-            lyrics = lyrics.get_lyrics(track['artist-credit'][0]['artist']['name'], track['title'])
+            lyrics = lyricslib.get_lyrics(track['artist-credit'][0]['artist']['name'], track['title'])
         except:
             lyrics = None
 
@@ -226,8 +229,6 @@ def get_album_aux(album, artist_id=None, artist_name=None):
     except Exception as e:
         print(f"Error while serializing RDF graph: {e}")
 
-    print("ID: " + album_obj.id)
-    print("ID: " + album_obj.logo)
     print("Fuck")
     return album_obj
 
@@ -275,7 +276,15 @@ def fetch_track(query):
 
 def fetch_track_from_id(track_id):
     track = musicbrainz.get_track(track_id)
-    return get_track_aux(track)
+    print(track)
+    albums = musicbrainz.get_track_albums(track_id)
+    artists = musicbrainz.get_track_artists(track_id)
+    print(f"Artist: {artists}")
+    album_name = albums[0]['title']
+    artist_name = artists[0]['name']
+    album_id = albums[0]['id']
+    artist_id = artists[0]['id']
+    return get_track_aux(track, album_id=album_id, album_name=album_name, artist_id=artist_id, artist_name=artist_name)
 
 def join_artist_albums(artist_obj):
     albums = musicbrainz.get_artist_albums(artist_obj.id)
