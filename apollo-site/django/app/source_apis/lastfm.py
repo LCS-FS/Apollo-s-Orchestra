@@ -20,6 +20,7 @@ network = pylast.LastFMNetwork(
 def get_album_cover(mbid):
     # Parameters for the API request
     BASE_URL = 'http://ws.audioscrobbler.com/2.0/'
+
     params = {
         'method': 'album.getinfo',
         'api_key': API_KEY,

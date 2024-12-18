@@ -12,7 +12,25 @@ def get_artist(artist_id):
     return mb.get_artist_by_id(id=artist_id)["artist"]
 
 def get_artist_albums(artist_id):
-    return mb.browse_release_groups(artist=artist_id)["release-group-list"]
+    # Search all releases by the artist
+    release_groups = mb.browse_release_groups(artist=artist_id)["release-group-list"]
+    releases = []
+    for group in release_groups:
+        same_name_albums = search_album(group['title'])
+        print(group['title'])
+        check = True
+
+        for album in same_name_albums:
+            if album['artist-credit'][0]['artist']['id'] == artist_id:
+                print("YES")
+                releases.append(album)
+                check = False
+                break
+
+        if check:
+            releases.append(album)
+
+    return releases
 
 # albums
 def search_album(query):
@@ -31,11 +49,19 @@ def get_album_artists(album_id):
     return mb.browse_artists(release=album_id)["artist-list"]
 
 def get_album_cover_art(album_id):
-    images = mb.get_image_list(release=album_id)["images"]
-    for image in images:
-        if image.get("front"):
-            return image
-    return None
+    try:
+        # Retrieve album information
+        album = mb.get_release_by_id(album_id)
+        if album and 'cover-art-archive' in album:
+            # Extract the URL of the largest image (front image)
+            images = album['cover-art-archive']['images']
+            if images:
+                cover_url = images[0]['image']  # Typically, the first image is the front cover
+                return cover_url
+        return None
+    except mb.ResponseError as e:
+        print(f"Error retrieving album cover: {e}")
+        return None
 
 def get_album_realese_type(album_id):
     release_type = mb.get_release_by_id(album_id)["release"]["release-group"]["type"]

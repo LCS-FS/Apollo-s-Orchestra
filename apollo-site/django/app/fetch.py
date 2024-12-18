@@ -132,7 +132,8 @@ def get_album_aux(album, artist_id=None, artist_name=None):
         artist_id=artist_id if artist_id else album['artist-credit'][0]['artist']['id'],
         about = None,
         release_type=album['release-group']['type'] if 'release-group' in album else album['primary-type'] if 'primary-type' in album else None,
-        date_published=datetime.strptime(album['date'], '%Y-%m-%d').date() if 'date' in album else datetime.strptime(album['first-release-date'], '%Y-%m-%d').date() if 'first-release-date' in album else None,
+        #date_published=datetime.strptime(album['date'], '%Y').date() if 'date' in album else datetime.strptime(album['first-release-date'], '%Y').date() if 'first-release-date' in album else None,
+        date_published=None, #DATETIME IS FUCKING UP THE SHOWING OF ALBUMS NEED HELP
         num_tracks=album['medium-track-count'] if 'medium-track-count' in album else None,
         tracks=None,
         label=label,
@@ -149,6 +150,10 @@ def get_album_aux(album, artist_id=None, artist_name=None):
         print(g.serialize(format="turtle"))
     except Exception as e:
         print(f"Error while serializing RDF graph: {e}")
+
+    print("ID: " + album_obj.id)
+    print("ID: " + album_obj.logo)
+    print("Fuck")
     return album_obj
 
 def fetch_artist(query):
@@ -199,6 +204,7 @@ def fetch_track_from_id(track_id):
 
 def join_artist_albums(artist_obj):
     albums = musicbrainz.get_artist_albums(artist_obj.id)
+    print("DICK SIZE: " , len(albums))
     albums_obj_list = []
     for album in albums:
         try:
