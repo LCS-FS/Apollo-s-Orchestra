@@ -92,21 +92,61 @@ def get_artist_aux(artist):
         print(f"\033[91m{e}\033[0m")
         return None
 
-def get_track_aux(track):
+def get_track_aux(track, album_id=None, album_name=None, image_url=None, artist_id = None, artist_name = None):
     track_lastfm = lastfm.search_track_by_mbid(track['id'])
+    print(track)
     
+    logo = None
+
+    if not (artist_id and artist_name):
+        try:
+            artist = musicbrainz.get_track_artists(track['id'])
+            artist_name = artist[0]['name']
+            artist_id = artist[0]['id']
+        except:
+            artist_name = None
+            artist_id = None
+    
+    if not album_id:
+        try:
+            album = musicbrainz.get_track_albums(track['id'])
+            album_name = album[0]['title']
+            album_id = album[0]['id']
+        except:
+            album_name = None
+            album_id = None
+
+    if not image_url:
+        try:
+            logo = lastfm.get_album_cover(album_id)
+        except:
+            try:
+                logo = lastfm.get_album_cover(track['release-list'][0]['id'])
+            except: 
+                logo = None
+    else:
+        logo = image_url
+
+    try:
+        lyrics = lyrics.get_lyrics(artist_name, track['title'])
+    except:
+        try:
+            lyrics = lyrics.get_lyrics(track['artist-credit'][0]['artist']['name'], track['title'])
+        except:
+            lyrics = None
+
     track_obj = ontology.Track(
         name=track['title'],
         score=track['ext:score'] if 'ext:score' in track else None,
         id=track['id'],
         duration=f"{int(track['length']) // 60000}:{int(track['length']) % 60000}",
-        music_group_id=track['artist-credit'][0]['artist']['id'],
-        music_group_name=track['artist-credit'][0]['artist']['name'],
-        album_id=track['release-list'][0]['id'] if 'id' in track['release-list'][0] else None,
-        album_name=track['release-list'][0]['title'] if 'title' in track['release-list'][0] else None,
+        music_group_id=track['artist-credit'][0]['artist']['id'] if 'artist-credit' in track else artist_id,
+        music_group_name=track['artist-credit'][0]['artist']['name'] if 'artist-credit' in track else artist_name,
+        album_id=track['release-list'][0]['id'] if 'release-list' in track else album_id,
+        album_name=track['release-list'][0]['title'] if 'release-list' in track else album_name,
         about=track_lastfm.get_wiki_content(),
-        logo=lastfm.get_album_cover(track['release-list'][0]['id']),
-        lyrics=lyrics.get_lyrics(track['artist-credit'][0]['artist']['name'], track['title'])
+        logo=logo,
+        lyrics=lyrics
     )
     try:
         # Convert artist_obj to an RDF graph
@@ -149,11 +189,22 @@ def get_album_aux(album, artist_id=None, artist_name=None):
     
     label = wikidata_album['results']['bindings']['recordLabel']['value'] if 'recordLabel' in wikidata_album['results']['bindings'] else None
     
+
+    try:
+        artist = musicbrainz.get_album_artists(album['id'])
+        artist_name = artist[0]['name']
+        artist_id = artist[0]['id']
+    except:
+        artist_name = None
+        artist_id = None
+
+    print(f"Artist: {artist_name} ({artist_id})")
+
     album_obj = ontology.Album(
         name=album['title'],
         id=album['id'],
-        artist_name=artist_name if artist_name else album['artist-credit'][0]['artist']['name'],
-        artist_id=artist_id if artist_id else album['artist-credit'][0]['artist']['id'],
+        artist_name=artist_name if artist_name else album['artist-credit'][0]['artist']['name'] if 'artist-credit' in album else artist_name,
+        artist_id=artist_id if artist_id else album['artist-credit'][0]['artist']['id'] if 'artist-credit' in album else artist_id,
         about = None,
         release_type=album['release-group']['type'] if 'release-group' in album else album['primary-type'] if 'primary-type' in album else None,
         #date_published=datetime.strptime(album['date'], '%Y').date() if 'date' in album else datetime.strptime(album['first-release-date'], '%Y').date() if 'first-release-date' in album else None,
@@ -245,7 +296,7 @@ def join_album_tracks(album_obj):
     tracks_obj_list = []
     for track in tracks:
         try:
-            track_obj = get_track_aux(track)
+            track_obj = get_track_aux(track, album_id=album_obj.id, album_name=album_obj.name, image_url=album_obj.logo, artist_id=album_obj.artist_id, artist_name=album_obj.artist_name)
             tracks_obj_list.append(track_obj)
         except Exception as e:
             print(f"\033[91m{e}\033[0m")

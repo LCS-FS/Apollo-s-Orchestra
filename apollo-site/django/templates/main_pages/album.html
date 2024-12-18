@@ -1,0 +1,51 @@
+{% extends "../base.html" %}
+
+{% comment %} 
+self.num_tracks = num_tracks
+self.tracks = tracks
+self.release_type = release_type
+self.about = about
+self.date_published = date_published
+self.logo = logo
+self.name = name
+self.label = label
+self.score = score
+self.artist_name = artist_name
+self.artist_id = artist_id
+self.id = id
+{% endcomment %}
+
+{% block page %}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex">
+            <img src="{{ album.logo }}" class="img-fluid" alt="{{ album.name }}" style="width: 100%; height: 250px" >
+            <div class="align-items-center"> 
+                <h1 class="ml-3">{{ album.name }}</h1>
+                <p class="ml-3"> <a href="/artist/{{album.artist_id}}">{{ album.artist_name }}</a></p>
+            </div>
+        </div>
+        <div>
+            <p class="text-muted">Published: {{ album.date_published }}</p>
+            <p class="text-muted">Label: {{ album.label }}</p>
+        </div>
+    </div>
+    <div>
+        {% if album.about %}
+            <p>{{ album.about|safe }}</p>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h2>{{album.num_tracks}} Tracks:</h2>
+        </div>
+    </div>
+    <div class="row">
+        {% for result in album.tracks %}
+            {% include "search_results/track.html" %}
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock page %}
