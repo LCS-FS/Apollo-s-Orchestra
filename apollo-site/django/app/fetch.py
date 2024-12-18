@@ -2,6 +2,7 @@ from .source_apis import lastfm, lyrics, musicbrainz, wikidata, ontology
 import json
 from rdflib import Graph
 from datetime import datetime
+import re
 
 def get_artist_aux(artist):
     try:
@@ -119,6 +120,29 @@ def get_track_aux(track):
     print("track success")
     return track_obj
 
+def parse_date(album):
+    date_str = None
+    
+    if 'date' in album:
+        date_str = album['date']
+    elif 'first-release-date' in album:
+        date_str = album['first-release-date']
+    
+    if date_str:
+        # Regular expression to match 'YYYY', 'YYYY-MM', 'YYYY-MM-DD' formats
+        match = re.match(r'(\d{4})(?:-(\d{1,2})(?:-(\d{1,2}))?)?', date_str)
+        if match:
+            year = int(match.group(1))
+            month = int(match.group(2)) if match.group(2) else 1
+            day = int(match.group(3)) if match.group(3) else 1
+            
+            try:
+                return datetime(year, month, day).date()
+            except ValueError:
+                return None
+    
+    return None
+
 def get_album_aux(album, artist_id=None, artist_name=None):
     #wikidata: label, logo, 
     wikidata_album = wikidata.query_album_record_by_MB_Id(album['id'])
@@ -133,7 +157,7 @@ def get_album_aux(album, artist_id=None, artist_name=None):
         about = None,
         release_type=album['release-group']['type'] if 'release-group' in album else album['primary-type'] if 'primary-type' in album else None,
         #date_published=datetime.strptime(album['date'], '%Y').date() if 'date' in album else datetime.strptime(album['first-release-date'], '%Y').date() if 'first-release-date' in album else None,
-        date_published=None, #DATETIME IS FUCKING UP THE SHOWING OF ALBUMS NEED HELP
+        date_published=parse_date(album),
         num_tracks=album['medium-track-count'] if 'medium-track-count' in album else None,
         tracks=None,
         label=label,
