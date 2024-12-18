@@ -46,6 +46,16 @@ self.id = id
             {% include "search_results/track.html" %}
         {% endfor %}
     </div>
+    {% if graph %}
+        <div class="row">
+            <div class="col-md-12">
+                <h2>RDF:</h2>
+            </div>
+        </div>
+        <div class="row" style="background-color: grey;">
+            <pre><code style="color: white;">{{ graph | safe }}</code></pre>
+        </div>
+    {% endif %}
 </div>
 
 {% endblock page %}

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .fetch import fetch_album, fetch_album_from_id, fetch_artist_from_id, fetch_artist, fetch_track, fetch_track_from_id, join_album_tracks, join_artist_albums
+from django.http import JsonResponse
 
 # Create your views here.
 def index(request):
@@ -9,10 +10,6 @@ def index(request):
 def search(request):
     query = request.GET.get("query")
     searchType = request.GET.get("searchType")
-    
-    print(query)
-    print(searchType)
-
     match searchType:
         case "artists":
             results = fetch_artist(query)
@@ -28,41 +25,84 @@ def search(request):
             results = []
         
     results = sorted(results)
-    print(results)
     return render(request, "search.html", {"results": results, "type": searchType, "query": query, "type": typeNum})
 
-def artist(request, artist_id):
+def get_artist(request, artist_id):
     artist = fetch_artist_from_id(artist_id)
     artist_with_albums = join_artist_albums(artist)
-    return render(request, "main_pages/artist.html", {"artist": artist_with_albums})
+    try:
+        # Convert artist_obj to an RDF graph
+        g = artist_with_albums.to_rdf()
+
+        # Print the graph in Turtle format
+        print("Serialized RDF Graph in Turtle format:")
+        print(g.serialize(format="turtle"))
+    except Exception as e:
+        g = None
+        print(f"Error while serializing RDF graph: {e}")
+    return artist_with_albums, g
+
+def get_album(request, album_id):
+    album = fetch_album_from_id(album_id)
+    album_with_tracks = join_album_tracks(album)
+    try:
+        # Convert artist_obj to an RDF graph
+        g = album_with_tracks.to_rdf()
+
+        # Print the graph in Turtle format
+        print("Serialized RDF Graph in Turtle format:")
+        print(g.serialize(format="turtle"))
+    except Exception as e:
+        g = None
+        print(f"Error while serializing RDF graph: {e}")
+    return album_with_tracks, g
+
+def get_track(request, track_id):
+    track = fetch_track_from_id(track_id)
+    try:
+        # Convert artist_obj to an RDF graph
+        g = track.to_rdf()
+
+        # Print the graph in Turtle format
+        print("Serialized RDF Graph in Turtle format:")
+        print(g.serialize(format="turtle"))
+    except Exception as e:
+        g = None
+        print(f"Error while serializing RDF graph: {e}")
+    return track, g
+
+def artist(request, artist_id):
+    artist_with_albums, g = get_artist(request, artist_id)
+    return render(request, "main_pages/artist.html", {"artist": artist_with_albums, "graph": g.serialize(format="turtle")})
 
 def album(request, album_id):
-    album = fetch_album_from_id(album_id)
-    album_with_tracks = join_album_tracks(album)
-    return render(request, "main_pages/album.html", {"album": album_with_tracks})
+    album_with_tracks, g = get_album(request, album_id)
+    return render(request, "main_pages/album.html", {"album": album_with_tracks, "graph": g.serialize(format="turtle")})
 
 def track(request, track_id):
-    track = fetch_track_from_id(track_id)
-    print(f"track object: {track}")
-    return render(request, "main_pages/track.html", {"track": track})
+    track, g = get_track(request, track_id)
+    return render(request, "main_pages/track.html", {"track": track, "graph": g.serialize(format="turtle")})
 
-def artist_rdf(request, artist_id):
-    artist = fetch_artist_from_id(artist_id)
-    print(artist)
-    artist_with_albums = join_artist_albums(artist)
+def artist_api(request, artist_id):
+    _, g = get_artist(request, artist_id)
 
-    result = artist_with_albums.to_rdf()
-    print(result)
-    return render(request, "artist.html", {"result": result})
+    data = {
+        "graph": g.serialize(format="turtle") if g else None
+    }
+    return JsonResponse(data)
 
-def album_rdf(request, album_id):
-    album = fetch_album_from_id(album_id)
-    album_with_tracks = join_album_tracks(album)
+def album_api(request, album_id):
+    _, g = get_album(request, album_id)
 
-    result = album_with_tracks.to_rdf()
-    return render(request, "album.html", {"result": result})
+    data = {
+        "rdf": g.serialize(format="turtle") if g else None
+    }
+    return JsonResponse(data)
 
-def track_rdf(request, track_id):
-    track = fetch_track_from_id(track_id)
-    result = track.to_rdf()
-    return render(request, "track.html", {"result": result})
+def track_api(request, track_id):
+    _, g = get_track(request, track_id)
+
+    data = {
+        "rdf": g.serialize(format="turtle") if g else None
+    }
+    return JsonResponse(data)

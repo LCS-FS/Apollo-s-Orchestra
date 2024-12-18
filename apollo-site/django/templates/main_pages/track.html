@@ -1,19 +1,5 @@
 {% extends "../base.html" %}
 
-{% comment %} 
-self.id = id
-self.duration = duration
-self.about = about
-self.name = name
-self.lyrics = lyrics
-self.logo = logo
-self.music_group_name = music_group_name
-self.music_group_id = music_group_id
-self.album_name = album_name
-self.album_id = album_id
-self.score = score
-{% endcomment %}
-
 {% block page %}
 
 <div class="container">
@@ -42,6 +28,16 @@ self.score = score
     <div class="row">
         <pre>{{ track.lyrics | safe }}</pre>
     </div>
+    {% endif %}
+    {% if graph %}
+        <div class="row">
+            <div class="col-md-12">
+                <h2>RDF:</h2>
+            </div>
+        </div>
+        <div class="row" style="background-color: light-grey;">
+            <pre><code style="color: white;">{{ graph | safe }}</code></pre>
+        </div>
     {% endif %}
 </div>
 

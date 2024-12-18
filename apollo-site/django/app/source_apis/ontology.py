@@ -192,11 +192,10 @@ class Album:
             g.add((album_uri, DC.description, Literal(self.about)))
         if self.logo:
             g.add((album_uri, FOAF.logo, URIRef(self.logo)))
-        #Uncomment for the real deal
-        #for track in self.tracks:
-        #    g += track.to_rdf()  # Add the track RDF data
-        #    track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
-        #    g.add((album_uri, EX.hasTrack, track_uri))
+        for track in self.tracks:
+            g += track.to_rdf()  # Add the track RDF data
+            track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
+            g.add((album_uri, EX.hasTrack, track_uri))
         if self.score:
             g.add((album_uri, EX.score, Literal(self.score)))
         if self.artist_name:
@@ -351,3 +350,5 @@ class MusicGroup:
 
     def __eq__(self, other):
         return self.score == other.score
+    
+    

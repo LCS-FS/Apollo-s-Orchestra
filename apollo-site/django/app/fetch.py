@@ -78,15 +78,7 @@ def get_artist_aux(artist):
             logo=logo,
             members=band_members
         )
-        try:
-            # Convert artist_obj to an RDF graph
-            g = artist_obj.to_rdf()
-
-            # Print the graph in Turtle format
-            print("Serialized RDF Graph in Turtle format:")
-            print(g.serialize(format="turtle"))
-        except Exception as e:
-            print(f"Error while serializing RDF graph: {e}")
+        print("artist success")
         return artist_obj
     except Exception as e:
         print(f"\033[91m{e}\033[0m")
@@ -94,7 +86,6 @@ def get_artist_aux(artist):
 
 def get_track_aux(track, album_id=None, album_name=None, image_url=None, artist_id = None, artist_name = None):
     track_lastfm = lastfm.search_track_by_mbid(track['id'])
-    print(track)
     
     logo = None
 
@@ -128,10 +119,8 @@ def get_track_aux(track, album_id=None, album_name=None, image_url=None, artist_
         logo = image_url
 
 
-    print(f"Artist: {artist_name} {track['title']}")
     try:
         lyrics = lyricslib.get_lyrics(artist_name, track['title'])
-        print(lyrics)
     except:
         try:
             lyrics = lyricslib.get_lyrics(track['artist-credit'][0]['artist']['name'], track['title'])
@@ -151,15 +140,6 @@ def get_track_aux(track, album_id=None, album_name=None, image_url=None, artist_
         logo=logo,
         lyrics=lyrics
     )
-    try:
-        # Convert artist_obj to an RDF graph
-        g = track_obj.to_rdf()
-
-        # Print the graph in Turtle format
-        print("Serialized RDF Graph in Turtle format:")
-        print(g.serialize(format="turtle"))
-    except Exception as e:
-        print(f"Error while serializing RDF graph: {e}")
     print("track success")
     return track_obj
 
@@ -201,8 +181,6 @@ def get_album_aux(album, artist_id=None, artist_name=None):
         artist_name = None
         artist_id = None
 
-    print(f"Artist: {artist_name} ({artist_id})")
-
     album_obj = ontology.Album(
         name=album['title'],
         id=album['id'],
@@ -218,18 +196,7 @@ def get_album_aux(album, artist_id=None, artist_name=None):
         score=album['ext:score'] if 'ext:score' in album else None,
         logo=lastfm.get_album_cover(album['id'])
     )
-    print(album_obj.logo)
-    try:
-        # Convert artist_obj to an RDF graph
-        g = album_obj.to_rdf()
-
-        # Print the graph in Turtle format
-        print("Serialized RDF Graph in Turtle format:")
-        print(g.serialize(format="turtle"))
-    except Exception as e:
-        print(f"Error while serializing RDF graph: {e}")
-
-    print("Fuck")
+    print("album success")
     return album_obj
 
 def fetch_artist(query):
@@ -276,10 +243,8 @@ def fetch_track(query):
 
 def fetch_track_from_id(track_id):
     track = musicbrainz.get_track(track_id)
-    print(track)
     albums = musicbrainz.get_track_albums(track_id)
     artists = musicbrainz.get_track_artists(track_id)
-    print(f"Artist: {artists}")
     album_name = albums[0]['title']
     artist_name = artists[0]['name']
     album_id = albums[0]['id']
@@ -288,7 +253,6 @@ def fetch_track_from_id(track_id):
 
 def join_artist_albums(artist_obj):
     albums = musicbrainz.get_artist_albums(artist_obj.id)
-    print("DICK SIZE: " , len(albums))
     albums_obj_list = []
     for album in albums:
         try:
