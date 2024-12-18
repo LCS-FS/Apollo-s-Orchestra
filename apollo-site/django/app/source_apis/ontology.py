@@ -48,10 +48,8 @@ class Member:
             g.add((member_uri, FOAF.givenName, Literal(self.given_name)))
         if self.gender:
             g.add((member_uri, FOAF.gender, Literal(self.gender)))
-        print(self.birth_date)
         if self.birth_date:
             g.add((member_uri, FOAF.birthday, Literal(self.birth_date, datatype=XSD.date)))
-        print("HEREEEEEEE")
         if self.death_date:
             g.add((member_uri, EX.deathDate, Literal(self.death_date, datatype=XSD.date)))
         if self.nationality:
@@ -182,20 +180,21 @@ class Album:
     def to_rdf(self) -> Graph:
         g = Graph()
         album_uri = EX[f"album/{self.name.replace(' ', '_')}"]
+        
         g.add((album_uri, RDF.type, EX.Album))
         g.add((album_uri, DC.title, Literal(self.name)))
         g.add((album_uri, EX.releaseType, Literal(self.release_type)))
-        print(self.date_published)
         if (self.date_published != None): 
             g.add((album_uri, DC.date, Literal(self.date_published.isoformat())))
         if self.about:
             g.add((album_uri, DC.description, Literal(self.about)))
         if self.logo:
             g.add((album_uri, FOAF.logo, URIRef(self.logo)))
-        for track in self.tracks:
-            g += track.to_rdf()  # Add the track RDF data
-            track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
-            g.add((album_uri, EX.hasTrack, track_uri))
+        if self.tracks:
+            for track in self.tracks:
+                g += track.to_rdf()  # Add the track RDF data
+                track_uri = EX[f"track/{track.name.replace(' ', '_')}"]
+                g.add((album_uri, EX.hasTrack, track_uri))
         if self.score:
             g.add((album_uri, EX.score, Literal(self.score)))
         if self.artist_name:
@@ -301,9 +300,7 @@ class MusicGroup:
         for member in self.members:
             path = member.given_name.replace(' ', '_')
             g += member.to_rdf()  # Add the member RDF data
-            print(path)
             member_uri = EX[f"member/{path}"]
-            print("here Music Group")
             g.add((group_uri, FOAF.member, member_uri))
         for album in self.albums:
             g += album.to_rdf()  # Add the album RDF data

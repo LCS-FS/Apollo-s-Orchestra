@@ -29,7 +29,9 @@ def search(request):
 
 def get_artist(request, artist_id):
     artist = fetch_artist_from_id(artist_id)
+    print(artist)
     artist_with_albums = join_artist_albums(artist)
+    print(artist_with_albums)
     try:
         # Convert artist_obj to an RDF graph
         g = artist_with_albums.to_rdf()
