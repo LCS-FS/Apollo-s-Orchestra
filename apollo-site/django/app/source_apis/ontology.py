@@ -43,7 +43,8 @@ class Member:
         g = Graph()
         member_uri = EX[f"member/{self.given_name.replace(' ', '_')}"]
         g.add((member_uri, RDF.type, FOAF.Person))
-        g.add((member_uri, FOAF.name, Literal(self.artist_name)))
+        if self.artist_name:
+            g.add((member_uri, FOAF.name, Literal(self.artist_name)))
         if self.given_name:
             g.add((member_uri, FOAF.givenName, Literal(self.given_name)))
         if self.gender:
@@ -286,10 +287,14 @@ class MusicGroup:
             g.add((group_uri, EX.genre, Literal(self.genre)))
         for award in self.awards:
             g.add((group_uri, EX.award, Literal(award)))
-        if self.dissolution_date:
+        try:
             g.add((group_uri, EX.dissolutionDate, Literal(self.dissolution_date.isoformat(), datatype=XSD.date)))
-        if self.founding_date:
+        except:
+            pass
+        try:
             g.add((group_uri, EX.foundingDate, Literal(self.founding_date.isoformat(), datatype=XSD.date)))
+        except:
+            pass
         if self.founding_location:
             g.add((group_uri, EX.foundingLocation, Literal(self.founding_location)))
         if self.logo:

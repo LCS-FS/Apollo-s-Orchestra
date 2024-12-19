@@ -1,5 +1,5 @@
 ```mermaid
-graph TD
+graph LR
     MusicGroup[[MusicGroup]] --> album[[album]]
     MusicGroup --> genre([genre - **Text**])
     MusicGroup --> DissolutionDate([DissolutionDate - **Date**])
